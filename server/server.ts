@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import { Server as SocketIOServer } from 'socket.io';
+import { createRoom, joinRoom, leaveRoom } from './rooms'
+import { ServerEvents, ClientEvents } from '../shared/socket'
 
 const server = Fastify({
   logger: true,
@@ -8,15 +10,15 @@ const server = Fastify({
 });
 
 server.register(fastifyCors, {
-  origin: 'http://localhost:3000',
+  origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 });
 
-const socketIo = new SocketIOServer(server.server, {
+const socketIo = new SocketIOServer<ServerEvents, ClientEvents>(server.server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -25,12 +27,37 @@ const socketIo = new SocketIOServer(server.server, {
 socketIo.on('connection', (socket) => {
   server.log.info({ id: socket.id }, 'Client connected');
 
-  socket.on('message', (message: string) => {
-    server.log.info({ message }, 'Received Socket.IO message');
-    socket.emit('message', `Echo: ${message}`);
-  });
+  socket.on('room:create', () => {
+    const room = createRoom(socket.id)
+    socket.join(room.code)
+    socket.emit('room:created', room.code)
+  })
+
+  socket.on('room:join', (code) => {
+    const room = joinRoom(code, socket.id)
+    if (room) {
+      socket.join(code)
+      socket.emit('room:joined', room.gameState)
+      socket.to(code).emit('room:joined', room.gameState)
+    }
+    else {
+      socket.emit('room:error', 'Room not found or already full')
+    }
+  })
+
+  socket.on('game:giveup', () => {
+    const closedRoomCode = leaveRoom(socket.id)
+    if (closedRoomCode) {
+      socket.to(closedRoomCode).emit('game:ended', null)
+    }
+  })
 
   socket.on('disconnect', () => {
+    const closedRoomCode = leaveRoom(socket.id)
+    if (closedRoomCode) {
+      socket.to(closedRoomCode).emit('room:error', 'Opponent disconnected. Room closed')
+    }
+
     server.log.info({ id: socket.id }, 'Client disconnected');
   });
 });
