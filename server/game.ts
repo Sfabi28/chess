@@ -1,4 +1,4 @@
-import type { GameState, Square, Piece, Color, Board } from "./types"
+import type { GameState, Square, Piece, Color, Board } from "../shared/types"
 
 export function createInitialGameState() : GameState {
   var game = {} as GameState;
