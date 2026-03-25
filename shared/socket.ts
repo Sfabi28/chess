@@ -1,3 +1,5 @@
+import { GameState } from "./types"
+
 export interface ServerEvents { //client->server
   'room:create': () => void
   'room:join': (code: string) => void
@@ -6,9 +8,9 @@ export interface ServerEvents { //client->server
 
 export interface ClientEvents { //server->client
   'room:created': (roomCode: string) => void
-  'room:joined': (gameState: any) => void
+  'room:joined': (gameState: GameState) => void
   'room:error': (message: string) => void
-  'game:state': (gameState: any) => void
+  'game:state': (gameState: GameState) => void
   'game:move': (from: string, to: string) => void
   'game:ended': (winner: 'w' | 'b' | null) => void
 }
@@ -22,6 +24,6 @@ export interface Player {
 export interface Room {
   code: string
   players: Player[]
-  gameState: any
+  gameState: GameState
   active: boolean
 }

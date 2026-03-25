@@ -48,6 +48,7 @@ socketIo.on('connection', (socket) => {
   socket.on('game:giveup', () => {
     const closedRoomCode = leaveRoom(socket.id)
     if (closedRoomCode) {
+      socket.emit('game:ended', null)
       socket.to(closedRoomCode).emit('game:ended', null)
     }
   })

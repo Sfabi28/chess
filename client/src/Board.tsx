@@ -2,9 +2,10 @@ import './Board.css'
 
 type BoardProps = {
   onGiveUp: () => void
+  roomCode: string
 }
 
-function Board({ onGiveUp }: BoardProps) {
+function Board({ onGiveUp, roomCode }: BoardProps) {
   const squares = Array.from({ length: 64 }, (_, index) => {
     const row = Math.floor(index / 8)
     const col = index % 8
@@ -15,6 +16,7 @@ function Board({ onGiveUp }: BoardProps) {
 
   return (
     <div>
+      <h3>Code: {roomCode || '---'}</h3>
       <div className="board">{squares}</div>
       <button onClick={onGiveUp}>Give up</button>
     </div>
