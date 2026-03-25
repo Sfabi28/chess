@@ -10,13 +10,15 @@ let listenersBound = false
 function App() {
   const [currentScreen, setCurrentScreen] = useState('menu')
   const [roomCode, setRoomCode] = useState('')
+  const [color, setColor] = useState<'w' | 'b'>('w')
 
   if (!listenersBound) {
     listenersBound = true
 
     socket.on('room:created', (code) => {
-      setCurrentScreen('game'),
+      setCurrentScreen('game')
       setRoomCode(code)
+      setColor('w')
     })
     socket.on('room:joined', () => setCurrentScreen('game'))
     socket.on('room:error', () => setCurrentScreen('menu'))
@@ -27,7 +29,10 @@ function App() {
     return (
       <main className="app">
         <Menu
-          onCreateRoom={() => socket.emit('room:create')}
+          onCreateRoom={() => {
+            setColor('w')
+            socket.emit('room:create')
+          }}
           onJoinRoom={() => setCurrentScreen('join')}
         />
       </main>
@@ -38,7 +43,10 @@ function App() {
     return (
       <main className="app">
         <Join
-          onJoinCode={(code: string) => socket.emit('room:join', code.trim())}
+          onJoinCode={(code: string) => {
+            setColor('b')
+            socket.emit('room:join', code.trim())
+          }}
           onBack={() => setCurrentScreen('menu')}
         />
       </main>
@@ -48,7 +56,7 @@ function App() {
   if (currentScreen === 'game') {
     return (
       <main className="app">
-        <Board onGiveUp={() => socket.emit('game:giveup')} roomCode = {roomCode}/>
+        <Board onGiveUp={() => socket.emit('game:giveup')} roomCode = {roomCode} color={color}/>
       </main>
     )
   }
