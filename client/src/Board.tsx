@@ -1,9 +1,26 @@
 import './Board.css'
+import type { Board as ChessBoard, Piece, Figure, Square } from '../../shared/types'
 
 type BoardProps = {
   onGiveUp: () => void
   roomCode: string
   color: 'w' | 'b'
+  board: ChessBoard | null
+}
+
+const FIGURE_TO_NAME: Record<Exclude<Figure, null>, string> = {
+  p: 'pawn',
+  n: 'knight',
+  b: 'bishop',
+  r: 'rook',
+  q: 'queen',
+  k: 'king',
+}
+
+function pieceSrc(piece: Piece | null) {
+  if (!piece?.color || !piece?.figure) 
+    return null
+  return `/assets/${piece.color}_${FIGURE_TO_NAME[piece.figure]}.png`
 }
 
 const WHITE_FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const
@@ -11,7 +28,7 @@ const BLACK_FILES = [...WHITE_FILES].reverse()
 const WHITE_RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'] as const
 const BLACK_RANKS = [...WHITE_RANKS].reverse()
 
-function Board({ onGiveUp, roomCode, color }: BoardProps) {
+function Board({ onGiveUp, roomCode, color, board }: BoardProps) {
   const files = color === 'w' ? WHITE_FILES : BLACK_FILES
   const ranks = color === 'w' ? WHITE_RANKS : BLACK_RANKS
 
@@ -20,10 +37,13 @@ function Board({ onGiveUp, roomCode, color }: BoardProps) {
       const fileIndex = file.charCodeAt(0) - 'a'.charCodeAt(0)
       const rankIndex = Number(rank) - 1
       const isDark = (fileIndex + rankIndex) % 2 === 0
-      const squareName = `${file}${rank}`
+      const squareName = `${file}${rank}` as Square
+      const piece = board?.[squareName] ?? null
+      const src = pieceSrc(piece)
 
       return (
         <div key={squareName} className={`square ${isDark ? 'dark' : 'light'}`}>
+          {src && <img src={src} alt="" className="piece" draggable={false} />}
           {colIndex === 0 && <span className="square-label-rank">{rank}</span>}
           {rowIndex === 7 && <span className="square-label-file">{file}</span>}
         </div>

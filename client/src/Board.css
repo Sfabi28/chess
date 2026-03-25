@@ -10,6 +10,9 @@
   width: 80px;
   height: 80px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .square.light {
@@ -36,4 +39,12 @@
   font-size: 12px;
   font-weight: 600;
   opacity: 0.8;
+}
+
+.piece {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }

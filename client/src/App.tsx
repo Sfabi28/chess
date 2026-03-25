@@ -4,6 +4,7 @@ import Join from './Join'
 import { useState } from 'react'
 import './App.css'
 import { socket } from './socket'
+import type { GameState } from '../../shared/types'
 
 let listenersBound = false
 
@@ -11,6 +12,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState('menu')
   const [roomCode, setRoomCode] = useState('')
   const [color, setColor] = useState<'w' | 'b'>('w')
+  const [gameState, setGameState] = useState<GameState | null>(null)
 
   if (!listenersBound) {
     listenersBound = true
@@ -20,7 +22,11 @@ function App() {
       setRoomCode(code)
       setColor('w')
     })
-    socket.on('room:joined', () => setCurrentScreen('game'))
+    socket.on('room:joined', (state) => {
+      setGameState(state)
+      setCurrentScreen('game')
+    })
+    socket.on('game:state', (state) => setGameState(state))
     socket.on('room:error', () => setCurrentScreen('menu'))
     socket.on('game:ended', () => setCurrentScreen('menu'))
   }
@@ -45,7 +51,9 @@ function App() {
         <Join
           onJoinCode={(code: string) => {
             setColor('b')
-            socket.emit('room:join', code.trim())
+            const trimmedCode = code.trim()
+            setRoomCode(trimmedCode)
+            socket.emit('room:join', trimmedCode)
           }}
           onBack={() => setCurrentScreen('menu')}
         />
@@ -56,7 +64,12 @@ function App() {
   if (currentScreen === 'game') {
     return (
       <main className="app">
-        <Board onGiveUp={() => socket.emit('game:giveup')} roomCode = {roomCode} color={color}/>
+        <Board
+          onGiveUp={() => socket.emit('game:giveup')}
+          roomCode={roomCode}
+          color={color}
+          board={gameState?.board ?? null}
+        />
       </main>
     )
   }
