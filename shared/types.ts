@@ -17,5 +17,12 @@ export type PromotionFigure = 'q' | 'r' | 'b' | 'n';
 
 export type Board = Record<Square, Piece | null>
 
-export type GameState = {board: Board, turn: Color, move: number, enPassant: Square | null, castlingRight: [boolean, boolean, boolean, boolean] }
+export type GameState = {
+  board: Board, 
+  turn: Color, 
+  move: number, 
+  enPassant: Square | null, 
+  castlingRight: [boolean, boolean, boolean, boolean],
+  legalMoves: Record<Square, Square[]> 
+}
 // castlingRight: [boolean, boolean, boolean, boolean] = blungo, bcorto, nlungo, ncorto
