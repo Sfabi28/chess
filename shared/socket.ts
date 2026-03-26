@@ -4,6 +4,7 @@ export interface ServerEvents { //client->server
   'room:create': () => void
   'room:join': (code: string) => void
   'game:giveup': () => void
+  'game:move': (from: string, to: string) => void
 }
 
 export interface ClientEvents { //server->client

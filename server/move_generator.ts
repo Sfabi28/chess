@@ -20,6 +20,21 @@ function generateMovesForPiece(square: Square, piece: Piece, board: Board): Squa
     }
 }
 
+function isSquareAttackedByOpponent(square: Square, byColor: Color, board: Board): boolean {
+    const opponentColor = byColor === 'w' ? 'b' : 'w';
+    
+    for (const squareKey in board) {
+        const piece = board[squareKey as Square];
+        if (piece && piece.color === opponentColor && piece.figure !== 'k') {
+            const moves = generateMovesForPiece(squareKey as Square, piece, board);
+            if (moves.includes(square)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function generateKingMoves(square: Square, color: Color, board: Board) : Square[] {
 
     const moves = [[-1,1], [0,1], [1,1], [-1,0], [1,0], [-1,-1], [0,-1], [1,-1]]
@@ -29,10 +44,27 @@ function generateKingMoves(square: Square, color: Color, board: Board) : Square[
     const currentX = square[0].charCodeAt(0) - 97
     const currentY = parseInt(square[1]) - 1  
 
+    for (const [dx, dy] of moves) {
+        const targetX = currentX + dx
+        const targetY = currentY + dy
+        var coordX : string
+        var coordY : string
 
+        if (targetX >= 0 && targetX <= 7) {
+            if (targetY >=0 && targetY <= 7) {
+                coordX = String.fromCharCode(targetX + 97)
+                coordY = (targetY + 1).toString()
+                const targetSquare = coordX + coordY as Square
 
+                if (!board[targetSquare] || board[targetSquare].color !== color)
+                    possibleMoves.push(targetSquare)
+            }
+        }
+    }
 
-    return possibleMoves
+    const legalMoves = possibleMoves.filter(move => !isSquareAttackedByOpponent(move, color, board))
+
+    return legalMoves
 }
 
 function generateQueenMoves(square: Square, color: Color, board: Board) : Square[] {

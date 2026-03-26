@@ -1,8 +1,10 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import { Server as SocketIOServer } from 'socket.io';
-import { createRoom, joinRoom, leaveRoom } from './rooms'
+import { createRoom, getRoomByPlayerId, joinRoom, leaveRoom } from './rooms'
 import { ServerEvents, ClientEvents } from '../shared/socket'
+import { generateLegalMoves } from './move_generator'
+import type { Square } from '../shared/types'
 
 const server = Fastify({
   logger: true,
@@ -53,6 +55,46 @@ socketIo.on('connection', (socket) => {
     }
   })
 
+  socket.on('game:move', (from, to) => {
+    const room = getRoomByPlayerId(socket.id)
+    if (!room) {
+      return
+    }
+
+    const player = room.players.find((p) => p.id === socket.id)
+    if (!player) {
+      return
+    }
+
+    const gameState = room.gameState
+    if (gameState.turn !== player.color) {
+      return
+    }
+
+    const fromSquare = from as Square
+    const toSquare = to as Square
+
+    const piece = gameState.board[fromSquare]
+    if (!piece || piece.color !== player.color) {
+      return
+    }
+
+    const legalFromMoves = gameState.legalMoves[fromSquare] ?? []
+    if (!legalFromMoves.includes(toSquare)) {
+      return
+    }
+
+    gameState.board[toSquare] = piece
+    gameState.board[fromSquare] = null
+
+    gameState.turn = gameState.turn === 'w' ? 'b' : 'w'
+    gameState.move += 1
+    gameState.selectedSquare = null
+    gameState.legalMoves = generateLegalMoves(gameState)
+
+    socketIo.to(room.code).emit('game:state', gameState)
+  })
+
   socket.on('disconnect', () => {
     const closedRoomCode = leaveRoom(socket.id)
     if (closedRoomCode) {
@@ -60,7 +102,7 @@ socketIo.on('connection', (socket) => {
     }
 
     server.log.info({ id: socket.id }, 'Client disconnected');
-  });
+  })
 });
 
 const start = async () => {

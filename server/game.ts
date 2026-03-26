@@ -1,4 +1,5 @@
 import type { GameState, Square, Piece, Color, Board } from "../shared/types"
+import { generateLegalMoves } from './move_generator'
 
 export function createInitialGameState() : GameState {
   var game = {} as GameState;
@@ -8,6 +9,8 @@ export function createInitialGameState() : GameState {
   game.move = 1;
   game.enPassant = null;
   game.castlingRight = [true, true, true, true];
+  game.selectedSquare = null;
+  game.legalMoves = generateLegalMoves(game);
 
   return game;
 }

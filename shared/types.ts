@@ -23,6 +23,7 @@ export type GameState = {
   move: number, 
   enPassant: Square | null, 
   castlingRight: [boolean, boolean, boolean, boolean],
-  legalMoves: Record<Square, Square[]> 
+  legalMoves: Record<Square, Square[]>
+  selectedSquare: Square | null
 }
 // castlingRight: [boolean, boolean, boolean, boolean] = blungo, bcorto, nlungo, ncorto

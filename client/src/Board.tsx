@@ -1,11 +1,15 @@
 import './Board.css'
-import type { Board as ChessBoard, Piece, Figure, Square } from '../../shared/types'
+import { useState } from 'react'
+import type { Board as ChessBoard, Piece, Figure, Square, Color } from '../../shared/types'
 
 type BoardProps = {
   onGiveUp: () => void
   roomCode: string
   color: 'w' | 'b'
   board: ChessBoard | null
+  legalMoves: Record<Square, Square[]> | null
+  socket: any
+  turn: Color
 }
 
 const FIGURE_TO_NAME: Record<Exclude<Figure, null>, string> = {
@@ -28,9 +32,31 @@ const BLACK_FILES = [...WHITE_FILES].reverse()
 const WHITE_RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'] as const
 const BLACK_RANKS = [...WHITE_RANKS].reverse()
 
-function Board({ onGiveUp, roomCode, color, board }: BoardProps) {
+function Board({ onGiveUp, roomCode, color, board, legalMoves, socket, turn }: BoardProps) {
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null)
+
   const files = color === 'w' ? WHITE_FILES : BLACK_FILES
   const ranks = color === 'w' ? WHITE_RANKS : BLACK_RANKS
+
+    const handleSquareClick = (squareName: Square) => {
+
+    const isMyTurn = turn === color
+    if (!isMyTurn) return
+
+    if (selectedSquare && legalMoves?.[selectedSquare]?.includes(squareName)) {
+      console.log(`Mossa: ${selectedSquare} -> ${squareName}`)
+      socket.emit('game:move', selectedSquare, squareName)
+      setSelectedSquare(null)
+      return
+    }
+
+    const piece = board?.[squareName]
+    if (piece && piece.color === color) {
+      setSelectedSquare(squareName)
+    } else {
+      setSelectedSquare(null)
+    }
+  }
 
   const squares = ranks.flatMap((rank, rowIndex) =>
     files.map((file, colIndex) => {
@@ -41,8 +67,16 @@ function Board({ onGiveUp, roomCode, color, board }: BoardProps) {
       const piece = board?.[squareName] ?? null
       const src = pieceSrc(piece)
 
+      const isSelected = selectedSquare === squareName
+      const isMyTurn = turn === color
+      const isLegalMove = isMyTurn && selectedSquare ? legalMoves?.[selectedSquare]?.includes(squareName): false
       return (
-        <div key={squareName} className={`square ${isDark ? 'dark' : 'light'}`}>
+        <div 
+          key={squareName} 
+          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLegalMove ? 'legal-move' : ''}`}
+          onClick={() => handleSquareClick(squareName)}
+          style={{ cursor: isMyTurn && piece?.color === color ? 'pointer' : 'default' }}
+        >
           {src && <img src={src} alt="" className="piece" draggable={false} />}
           {colIndex === 0 && <span className="square-label-rank">{rank}</span>}
           {rowIndex === 7 && <span className="square-label-file">{file}</span>}

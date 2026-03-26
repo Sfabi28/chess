@@ -69,6 +69,9 @@ function App() {
           roomCode={roomCode}
           color={color}
           board={gameState?.board ?? null}
+          legalMoves={gameState?.legalMoves ?? null}
+          socket={socket}
+          turn={gameState?.turn ?? null}
         />
       </main>
     )

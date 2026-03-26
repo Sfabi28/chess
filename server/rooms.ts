@@ -49,3 +49,13 @@ export function leaveRoom(socketId: string): string | null {
 export function getRoom(code: string) : Room | undefined{
     return rooms.get(code)
 }
+
+export function getRoomByPlayerId(socketId: string): Room | undefined {
+    for (const room of rooms.values()) {
+        if (room.players.some((player) => player.id === socketId)) {
+            return room
+        }
+    }
+
+    return undefined
+}
