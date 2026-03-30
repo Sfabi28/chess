@@ -1,3 +1,4 @@
+import dotenv from 'dotenv'
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import { Server as SocketIOServer } from 'socket.io';
@@ -5,6 +6,14 @@ import { createRoom, getRoomByPlayerId, joinRoom, leaveRoom } from './rooms'
 import { ServerEvents, ClientEvents } from '../shared/socket'
 import { generateLegalMoves } from './move_generator'
 import type { Square } from '../shared/types'
+import path from 'path'
+
+dotenv.config({ path: path.resolve(__dirname, '.env.local') })
+
+const clientUrl = process.env.VITE_CLIENT_URL || 'http://localhost:5173'
+const clientUrlAlt = process.env.VITE_CLIENT_URL_ALT || 'http://localhost:5174'
+const serverPort = process.env.SERVER_PORT || '8080'
+const serverHost = process.env.SERVER_HOST || '0.0.0.0'
 
 const server = Fastify({
   logger: true,
@@ -12,7 +21,7 @@ const server = Fastify({
 });
 
 server.register(fastifyCors, {
-  origin: 'http://localhost:5173',
+  origin: [clientUrl, clientUrlAlt],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -20,7 +29,7 @@ server.register(fastifyCors, {
 
 const socketIo = new SocketIOServer<ServerEvents, ClientEvents>(server.server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: [clientUrl, clientUrlAlt],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -48,11 +57,18 @@ socketIo.on('connection', (socket) => {
   })
 
   socket.on('game:giveup', () => {
-    const closedRoomCode = leaveRoom(socket.id)
-    if (closedRoomCode) {
-      socket.emit('game:ended', null)
-      socket.to(closedRoomCode).emit('game:ended', null)
-    }
+    const room = getRoomByPlayerId(socket.id)
+    if (!room) return
+
+    const closedRoomCode = room.code
+    
+    // Notifica entrambi i giocatori prima di eliminare
+    socketIo.to(closedRoomCode).emit('game:ended', { winner: null, reason: 'opponent_gave_up' })
+    
+    // Elimina la room
+    leaveRoom(socket.id)
+    
+    server.log.info({ roomCode: closedRoomCode }, 'Room closed: player gave up')
   })
 
   socket.on('game:move', (from, to) => {
@@ -107,8 +123,8 @@ socketIo.on('connection', (socket) => {
 
 const start = async () => {
   try {
-    await server.listen({ port: 8080, host: '0.0.0.0' });
-    server.log.info('Server listening on port 8080');
+    await server.listen({ port: Number(serverPort), host: serverHost });
+    server.log.info(`Server listening on ${serverHost}:${serverPort}`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);

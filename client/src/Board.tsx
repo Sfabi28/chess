@@ -70,10 +70,11 @@ function Board({ onGiveUp, roomCode, color, board, legalMoves, socket, turn }: B
       const isSelected = selectedSquare === squareName
       const isMyTurn = turn === color
       const isLegalMove = isMyTurn && selectedSquare ? legalMoves?.[selectedSquare]?.includes(squareName): false
+      const isLegalMoveCapture = isLegalMove && piece && piece.color !== color
       return (
         <div 
           key={squareName} 
-          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLegalMove ? 'legal-move' : ''}`}
+          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLegalMoveCapture ? 'legal-move-capture' : isLegalMove ? 'legal-move' : ''}`}
           onClick={() => handleSquareClick(squareName)}
           style={{ cursor: isMyTurn && piece?.color === color ? 'pointer' : 'default' }}
         >
