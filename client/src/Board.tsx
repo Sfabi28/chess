@@ -8,6 +8,7 @@ type BoardProps = {
   color: 'w' | 'b'
   board: ChessBoard | null
   legalMoves: Record<Square, Square[]> | null
+  lastMove: { from: Square, to: Square } | null
   socket: any
   turn: Color
 }
@@ -32,7 +33,7 @@ const BLACK_FILES = [...WHITE_FILES].reverse()
 const WHITE_RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'] as const
 const BLACK_RANKS = [...WHITE_RANKS].reverse()
 
-function Board({ onGiveUp, roomCode, color, board, legalMoves, socket, turn }: BoardProps) {
+function Board({ onGiveUp, roomCode, color, board, legalMoves, lastMove, socket, turn }: BoardProps) {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null)
 
   const files = color === 'w' ? WHITE_FILES : BLACK_FILES
@@ -71,10 +72,11 @@ function Board({ onGiveUp, roomCode, color, board, legalMoves, socket, turn }: B
       const isMyTurn = turn === color
       const isLegalMove = isMyTurn && selectedSquare ? legalMoves?.[selectedSquare]?.includes(squareName): false
       const isLegalMoveCapture = isLegalMove && piece && piece.color !== color
+      const isLastMove = lastMove && (squareName === lastMove.from || squareName === lastMove.to)
       return (
         <div 
           key={squareName} 
-          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLegalMoveCapture ? 'legal-move-capture' : isLegalMove ? 'legal-move' : ''}`}
+          className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''} ${isLegalMoveCapture ? 'legal-move-capture' : isLegalMove ? 'legal-move' : ''} ${isLastMove ? 'last-move' : ''}`}
           onClick={() => handleSquareClick(squareName)}
           style={{ cursor: isMyTurn && piece?.color === color ? 'pointer' : 'default' }}
         >

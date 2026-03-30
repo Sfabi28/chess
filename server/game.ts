@@ -10,6 +10,7 @@ export function createInitialGameState() : GameState {
   game.enPassant = null;
   game.castlingRight = [true, true, true, true];
   game.selectedSquare = null;
+  game.lastMove = null;
   game.legalMoves = generateLegalMoves(game);
 
   return game;

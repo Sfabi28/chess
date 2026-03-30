@@ -70,6 +70,7 @@ function App() {
           color={color}
           board={gameState?.board ?? null}
           legalMoves={gameState?.legalMoves ?? null}
+          lastMove={gameState?.lastMove ?? null}
           socket={socket}
           turn={gameState?.turn ?? null}
         />

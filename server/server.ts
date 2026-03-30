@@ -62,10 +62,6 @@ socketIo.on('connection', (socket) => {
 
     const closedRoomCode = room.code
     
-    // Notifica entrambi i giocatori prima di eliminare
-    socketIo.to(closedRoomCode).emit('game:ended', { winner: null, reason: 'opponent_gave_up' })
-    
-    // Elimina la room
     leaveRoom(socket.id)
     
     server.log.info({ roomCode: closedRoomCode }, 'Room closed: player gave up')
@@ -106,6 +102,7 @@ socketIo.on('connection', (socket) => {
     gameState.turn = gameState.turn === 'w' ? 'b' : 'w'
     gameState.move += 1
     gameState.selectedSquare = null
+    gameState.lastMove = { from: fromSquare, to: toSquare }
     gameState.legalMoves = generateLegalMoves(gameState)
 
     socketIo.to(room.code).emit('game:state', gameState)

@@ -14,7 +14,7 @@ function generateMovesForPiece(square: Square, piece: Piece, board: Board): Squa
         case 'q':
             return generateQueenMoves(square, piece.color, board);
         case 'k':
-            return generateKingMoves(square, piece.color, board);
+            return generateKingMoves(square, piece.color, board); // TODO aggiungere scacco matto
         default:
             return [];
     }
@@ -42,7 +42,7 @@ function generateKingMoves(square: Square, color: Color, board: Board) : Square[
     const possibleMoves: Square[] = []
 
     const currentX = square[0].charCodeAt(0) - 97
-    const currentY = parseInt(square[1]) - 1  
+    const currentY = parseInt(square[1]) - 1
 
     for (const [dx, dy] of moves) {
         const targetX = currentX + dx

@@ -25,5 +25,6 @@ export type GameState = {
   castlingRight: [boolean, boolean, boolean, boolean],
   legalMoves: Record<Square, Square[]>
   selectedSquare: Square | null
+  lastMove: { from: Square, to: Square } | null
 }
 // castlingRight: [boolean, boolean, boolean, boolean] = blungo, bcorto, nlungo, ncorto
